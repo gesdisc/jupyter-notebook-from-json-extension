@@ -4,3 +4,4 @@ node_modules
 **/package.json
 !/package.json
 jupyter_notebook_from_json_extension
+.venv
