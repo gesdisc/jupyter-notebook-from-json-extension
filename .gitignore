@@ -11,6 +11,7 @@ jupyter_notebook_from_json_extension/labextension
 # Version file is handled by hatchling
 jupyter_notebook_from_json_extension/_version.py
 _output
+.jupyterlite.doit.db
 
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python
