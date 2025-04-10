@@ -37,19 +37,47 @@ async function activatePlugin(app: JupyterFrontEnd) {
 
     console.log('Load notebook event caught: ', event);
 
+    // we don't allow the user to pass in a whole notebook, but rather just the filename and the cells
+    // we lock the rest to make sure we are using a consistent Python version and kernel
+    const notebookContent = {
+      metadata: {
+        // hardcoding the usage of Python as the kernel as well as locking the Python versions
+        kernelspec: {
+          name: 'python',
+          display_name: 'Python (Pyodide)',
+          language: 'python'
+        },
+        language_info: {
+          codemirror_mode: {
+            name: 'python',
+            version: 3
+          },
+          file_extension: '.py',
+          mimetype: 'text/x-python',
+          name: 'python',
+          nbconvert_exporter: 'python',
+          pygments_lexer: 'ipython3',
+          version: '3.8'
+        }
+      },
+      nbformat_minor: 5,
+      nbformat: 4,
+      cells: data.notebook, // the user's requested cells
+    }
+
     await saveNotebookToIndexedDB(
       JUPYTERLITE_DATABASE,
       JUPYTERLITE_STORE,
       data.filename,
       {
-        size: new TextEncoder().encode(JSON.stringify(data.notebook)).length,
+        size: new TextEncoder().encode(JSON.stringify(notebookContent)).length,
         name: data.filename,
         path: data.filename,
         last_modified: new Date().toISOString(),
         created: new Date().toISOString(),
         format: 'json',
         mimetype: 'application/json',
-        content: data.notebook,
+        content: notebookContent,
         writable: true,
         type: 'notebook'
       }
