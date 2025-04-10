@@ -41,7 +41,18 @@ async function activatePlugin(app: JupyterFrontEnd) {
       JUPYTERLITE_DATABASE,
       JUPYTERLITE_STORE,
       data.filename,
-      data.notebook
+      {
+        size: new TextEncoder().encode(JSON.stringify(data.notebook)).length,
+        name: data.filename,
+        path: data.filename,
+        last_modified: new Date().toISOString(),
+        created: new Date().toISOString(),
+        format: 'json',
+        mimetype: 'application/json',
+        content: data.notebook,
+        writable: true,
+        type: 'notebook'
+      }
     );
 
     console.log(`Notebook "${data.filename}" saved successfully.`);
@@ -86,16 +97,16 @@ function saveNotebookToIndexedDB(
 }
 
 function waitForCommand(commandId: string, app: JupyterFrontEnd) {
-  return new Promise<void>((resolve) => {
-    const maxWait = 10 * 1000 // 10 sec
-    const checkWait = 100 // check every 100ms
-    let totalWait = 0
+  return new Promise<void>(resolve => {
+    const maxWait = 10 * 1000; // 10 sec
+    const checkWait = 100; // check every 100ms
+    let totalWait = 0;
 
     const interval = setInterval(() => {
-      totalWait += checkWait
+      totalWait += checkWait;
 
       if (totalWait >= maxWait) {
-        throw new Error(`Command ${commandId} never registered`)
+        throw new Error(`Command ${commandId} never registered`);
       }
 
       if (app.commands.hasCommand(commandId)) {
@@ -103,7 +114,7 @@ function waitForCommand(commandId: string, app: JupyterFrontEnd) {
         resolve();
       }
     }, checkWait);
-  })
+  });
 }
 
 export default plugin;
