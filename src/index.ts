@@ -1,7 +1,4 @@
-import {
-  JupyterFrontEnd,
-  JupyterFrontEndPlugin
-} from '@jupyterlab/application';
+import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application'
 
 // TODO: handle existing filename/path. Don't overwrite it, just add an incrementing number to the end?
 // TODO: using Zod or an existing JSONSchema, validate that the notebook data is valid before attempting to create the notebook
@@ -49,6 +46,8 @@ async function activatePlugin(app: JupyterFrontEnd) {
 
     console.log(`Notebook "${data.filename}" saved successfully.`);
 
+    await waitForCommand('docmanager:open', app);
+
     app.commands.execute('docmanager:open', {
       path: data.filename,
       factory: 'Notebook'
@@ -84,6 +83,27 @@ function saveNotebookToIndexedDB(
       };
     };
   });
+}
+
+function waitForCommand(commandId: string, app: JupyterFrontEnd) {
+  return new Promise<void>((resolve) => {
+    const maxWait = 10 * 1000 // 10 sec
+    const checkWait = 100 // check every 100ms
+    let totalWait = 0
+
+    const interval = setInterval(() => {
+      totalWait += checkWait
+
+      if (totalWait >= maxWait) {
+        throw new Error(`Command ${commandId} never registered`)
+      }
+
+      if (app.commands.hasCommand(commandId)) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, checkWait);
+  })
 }
 
 export default plugin;
