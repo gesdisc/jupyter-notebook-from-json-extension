@@ -15,8 +15,12 @@ const plugin: JupyterFrontEndPlugin<void> = {
   activate: activatePlugin
 };
 
+const log = (...args: any[]) => {
+  console.log('[NotebookFromJSON]', ...args);
+};
+
 async function activatePlugin(app: JupyterFrontEnd) {
-  console.log(
+  log(
     'JupyterLab extension jupyter-notebook-from-json-extension is activated!'
   );
 
@@ -35,7 +39,7 @@ async function activatePlugin(app: JupyterFrontEnd) {
       );
     }
 
-    console.log('Load notebook event caught: ', event);
+    log('Load notebook event caught: ', event);
 
     // we don't allow the user to pass in a whole notebook, but rather just the filename and the cells
     // we lock the rest to make sure we are using a consistent Python version and kernel
@@ -83,7 +87,7 @@ async function activatePlugin(app: JupyterFrontEnd) {
       }
     );
 
-    console.log(`Notebook "${data.filename}" saved successfully.`);
+    log(`Notebook "${data.filename}" saved successfully.`);
 
     await waitForCommand('docmanager:open', app);
 
@@ -91,22 +95,17 @@ async function activatePlugin(app: JupyterFrontEnd) {
       path: data.filename,
       factory: 'Notebook'
     }).then((a: any) => {
-      console.log('docmanager open ', a)
-
       // defer to the next event loop so the panel is active
       requestAnimationFrame(() => {
         const panel = app.shell.currentWidget as any;
 
-        console.log('current widget ', app.shell.currentWidget)
-    
-        if (panel && panel.content && panel.sessionContext?.kernel) {
-          // Ensure kernel is ready
-          panel.sessionContext.ready.then(() => {
-            console.log('kernel is ready')
-            //Notebook
-            //NotebookActions.runAll(panel.content, panel.sessionContext);
-          });
-        }
+        log('Notebook panel is active')
+
+
+        panel.sessionContext.ready.then(() => {
+          log('Lernel is ready, running all cells in notebook')
+          app.commands.execute('notebook:run-all-cells');
+        });
       });
     });
   });
