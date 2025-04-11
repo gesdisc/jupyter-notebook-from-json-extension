@@ -72,6 +72,8 @@ async function activatePlugin(app: JupyterFrontEnd) {
         cells: data.notebook // the user's requested cells
       };
 
+      await delay(1000)
+
       await saveNotebookToIndexedDB(
         JUPYTERLITE_DATABASE,
         JUPYTERLITE_STORE,
@@ -218,15 +220,20 @@ function injectLoadingOverlay() {
   document.body.appendChild(overlay);
 }
 
-function removeLoadingOverlay() {
+async function removeLoadingOverlay() {
   log('Removing loading overlay');
   const overlay = document.getElementById('jupyterlite-loading-overlay');
+  
   if (overlay) {
-    setTimeout(() => {
-      // TODO: fix this, rather than doing a timeout, it would be nice to know when the cells are ACTUALLY done
-      overlay.remove();
-    }, 10000);
+    await delay(10000) // TODO: fix this, rather than doing a timeout, it would be nice to know when the cells are ACTUALLY done
+    overlay.remove();
   }
+}
+
+function delay(milliseconds: number) {
+  return new Promise(resolve => {
+    setTimeout(resolve, milliseconds)
+  })
 }
 
 export default plugin;
