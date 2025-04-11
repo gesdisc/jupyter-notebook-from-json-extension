@@ -171,6 +171,7 @@ function waitForCommand(commandId: string, app: JupyterFrontEnd) {
 }
 
 function injectLoadingOverlay() {
+  log('Injecting loading overlay ', document);
   const overlay = document.createElement('div');
   overlay.id = 'jupyterlite-loading-overlay';
   overlay.innerHTML = `
@@ -213,6 +214,7 @@ function injectLoadingOverlay() {
 }
 
 function removeLoadingOverlay() {
+  log('Removing loading overlay')
   const overlay = document.getElementById('jupyterlite-loading-overlay');
   if (overlay) overlay.remove();
 }
