@@ -110,7 +110,7 @@ async function activatePlugin(app: JupyterFrontEnd) {
             await panel.sessionContext.ready;
             log('Kernel is ready, running all cells in notebook');
 
-            await runAllCellsAndWait(panel);
+            await app.commands.execute('notebook:run-all-cells');
 
             log('All cells finished executing');
           });
@@ -220,36 +220,12 @@ function injectLoadingOverlay() {
 function removeLoadingOverlay() {
   log('Removing loading overlay')
   const overlay = document.getElementById('jupyterlite-loading-overlay');
-  if (overlay) overlay.remove();
-}
-
-async function runAllCellsAndWait(panel: any): Promise<void> {
-  const notebook = panel.content;
-  const context = panel.sessionContext;
-
-  await context.ready;
-
-  const cells = notebook.widgets;
-
-  const runPromises = cells.map((cell: any) => {
-    if (cell.model.type !== 'code') return Promise.resolve();
-
-    return new Promise<void>((resolve) => {
-      const future = notebook.sessionContext.session?.kernel?.requestExecute({
-        code: cell.model.value.text,
-        stop_on_error: true
-      });
-
-      if (!future) {
-        resolve();
-        return;
-      }
-
-      future.done.then(() => resolve());
-    });
-  });
-
-  await Promise.all(runPromises);
+  if (overlay) {
+    setTimeout(() => {
+      // TODO: fix this, rather than doing a timeout, it would be nice to know when the cells are ACTUALLY done
+      overlay.remove();
+    }, 5000);
+  }
 }
 
 export default plugin;
