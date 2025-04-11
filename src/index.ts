@@ -66,8 +66,8 @@ async function activatePlugin(app: JupyterFrontEnd) {
       },
       nbformat_minor: 5,
       nbformat: 4,
-      cells: data.notebook, // the user's requested cells
-    }
+      cells: data.notebook // the user's requested cells
+    };
 
     await saveNotebookToIndexedDB(
       JUPYTERLITE_DATABASE,
@@ -89,25 +89,33 @@ async function activatePlugin(app: JupyterFrontEnd) {
 
     log(`Notebook "${data.filename}" saved successfully.`);
 
-    await waitForCommand('docmanager:open', app);
+    injectLoadingOverlay();
 
-    app.commands.execute('docmanager:open', {
-      path: data.filename,
-      factory: 'Notebook'
-    }).then((a: any) => {
-      // defer to the next event loop so the panel is active
-      requestAnimationFrame(() => {
-        const panel = app.shell.currentWidget as any;
+    try {
+      await waitForCommand('docmanager:open', app);
 
-        log('Notebook panel is active')
+      app.commands
+        .execute('docmanager:open', {
+          path: data.filename,
+          factory: 'Notebook'
+        })
+        .then((a: any) => {
+          // defer to the next event loop so the panel is active
+          requestAnimationFrame(async () => {
+            const panel = app.shell.currentWidget as any;
+            log('Notebook panel is active');
 
+            await panel.sessionContext.ready;
+            log('Kernel is ready, running all cells in notebook');
 
-        panel.sessionContext.ready.then(() => {
-          log('Lernel is ready, running all cells in notebook')
-          app.commands.execute('notebook:run-all-cells');
+            await app.commands.execute('notebook:run-all-cells');
+          });
         });
-      });
-    });
+    } catch (err) {
+      console.error('Notebook load/run failed', err);
+    } finally {
+      removeLoadingOverlay();
+    }
   });
 }
 
@@ -160,6 +168,53 @@ function waitForCommand(commandId: string, app: JupyterFrontEnd) {
       }
     }, checkWait);
   });
+}
+
+function injectLoadingOverlay() {
+  const overlay = document.createElement('div');
+  overlay.id = 'jupyterlite-loading-overlay';
+  overlay.innerHTML = `
+    <div class="spinner"></div>
+    <p style="margin-top: 16px;">Loading notebook environment...</p>
+  `;
+  Object.assign(overlay.style, {
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    width: '100vw',
+    height: '100vh',
+    background: 'rgba(255, 255, 255, 0.95)',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: '9999',
+    fontFamily: 'sans-serif'
+  });
+
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .spinner {
+      border: 6px solid #eee;
+      border-top: 6px solid #0078D4;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
+  document.body.appendChild(overlay);
+}
+
+function removeLoadingOverlay() {
+  const overlay = document.getElementById('jupyterlite-loading-overlay');
+  if (overlay) overlay.remove();
 }
 
 export default plugin;
