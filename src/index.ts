@@ -224,7 +224,7 @@ function removeLoadingOverlay() {
     setTimeout(() => {
       // TODO: fix this, rather than doing a timeout, it would be nice to know when the cells are ACTUALLY done
       overlay.remove();
-    }, 5000);
+    }, 8000);
   }
 }
 
