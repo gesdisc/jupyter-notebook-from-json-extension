@@ -90,6 +90,24 @@ async function activatePlugin(app: JupyterFrontEnd) {
     app.commands.execute('docmanager:open', {
       path: data.filename,
       factory: 'Notebook'
+    }).then((a: any) => {
+      console.log('docmanager open ', a)
+
+      // defer to the next event loop so the panel is active
+      requestAnimationFrame(() => {
+        const panel = app.shell.currentWidget as any;
+
+        console.log('current widget ', app.shell.currentWidget)
+    
+        if (panel && panel.content && panel.sessionContext?.kernel) {
+          // Ensure kernel is ready
+          panel.sessionContext.ready.then(() => {
+            console.log('kernel is ready')
+            //Notebook
+            //NotebookActions.runAll(panel.content, panel.sessionContext);
+          });
+        }
+      });
     });
   });
 }
