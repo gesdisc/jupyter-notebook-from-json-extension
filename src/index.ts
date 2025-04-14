@@ -120,8 +120,6 @@ async function activatePlugin(app: JupyterFrontEnd) {
         });
     } catch (err) {
       console.error('Notebook load/run failed', err);
-    } finally {
-      removeLoadingOverlay();
     }
   });
 }
@@ -218,16 +216,6 @@ function injectLoadingOverlay() {
   `;
   document.head.appendChild(style);
   document.body.appendChild(overlay);
-}
-
-async function removeLoadingOverlay() {
-  log('Removing loading overlay');
-  const overlay = document.getElementById('jupyterlite-loading-overlay');
-  
-  if (overlay) {
-    await delay(10000) // TODO: fix this, rather than doing a timeout, it would be nice to know when the cells are ACTUALLY done
-    overlay.remove();
-  }
 }
 
 function delay(milliseconds: number) {
