@@ -1,8 +1,8 @@
 import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application'
+import { IndexedDBManager } from './indexeddb'
 
 // TODO: handle existing filename/path. Don't overwrite it, just add an incrementing number to the end?
 // TODO: using Zod or an existing JSONSchema, validate that the notebook data is valid before attempting to create the notebook
-// TODO: optional open notebook on save?
 
 const JUPYTERLITE_DATABASE = 'JupyterLite Storage';
 const JUPYTERLITE_STORE = 'files';
@@ -37,6 +37,17 @@ async function activatePlugin(app: JupyterFrontEnd) {
       throw new Error(
         "Can't load notebook: either notebook or filename are missing"
       );
+    }
+
+    // Store time series data if provided
+    if (data.timeSeriesData && data.databaseName && data.storeName) {
+      try {
+        const dbManager = new IndexedDBManager(data.databaseName, data.storeName);
+        await dbManager.storeData(data.timeSeriesData.key, data.timeSeriesData);
+        log(`Time series data stored successfully with key: ${data.timeSeriesData.key}`);
+      } catch (err) {
+        console.error('Failed to store time series data:', err);
+      }
     }
 
     injectLoadingOverlay();
