@@ -52,6 +52,18 @@ async function activatePlugin(app: JupyterFrontEnd) {
       }
     }
 
+    // store blob if provided
+    if (data.blob) {
+      try {
+        const dbManager = new IndexedDBManager(data.databaseName, data.storeName);
+        await dbManager.storeData(data.blob.key, data.blob);
+
+        log(`Blob data stored successfully with key: ${data.blob.key}`);
+      } catch (err) {
+        console.error('Failed to store blob data:', err);
+      }
+    }
+
     if ('bearerToken' in data && data.bearerToken) {
       localStorage.setItem('terra-token', data.bearerToken);
     }
