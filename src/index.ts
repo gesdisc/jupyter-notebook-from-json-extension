@@ -52,6 +52,10 @@ async function activatePlugin(app: JupyterFrontEnd) {
       }
     }
 
+    if ('bearerToken' in data && data.bearerToken) {
+      localStorage.setItem('terra-token', data.bearerToken);
+    }
+
     injectLoadingOverlay();
 
     try {
