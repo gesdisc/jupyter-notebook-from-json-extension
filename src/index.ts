@@ -142,9 +142,15 @@ async function activatePlugin(app: JupyterFrontEnd) {
         await app.commands.execute('notebook:run-all-cells');
 
         log('All cells finished executing');
+
+        setTimeout(() => {
+          // wait a bit then hide the overlay
+          removeLoadingOverlay();
+        }, 3000);
       });
     } catch (err) {
       console.error('Notebook load/run failed', err);
+      removeLoadingOverlay();
     }
   });
 
@@ -207,6 +213,13 @@ function waitForCommand(commandId: string, app: JupyterFrontEnd) {
       }
     }, checkWait);
   });
+}
+
+function removeLoadingOverlay() {
+  const overlay = document.getElementById('jupyterlite-loading-overlay');
+  if (overlay) {
+    overlay.remove();
+  }
 }
 
 function injectLoadingOverlay() {
