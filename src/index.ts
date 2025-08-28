@@ -118,27 +118,31 @@ async function activatePlugin(app: JupyterFrontEnd) {
 
       log('docmanager:open is available');
 
-      app.commands
-        .execute('docmanager:open', {
-          path: data.filename,
-          factory: 'Notebook'
-        })
-        .then((a: any) => {
-          // defer to the next event loop so the panel is active
-          requestAnimationFrame(async () => {
-            const panel = app.shell.currentWidget as any;
-            log('Notebook panel is active');
+      const openedWidget: any = await app.commands.execute('docmanager:open', {
+        path: data.filename,
+        factory: 'Notebook'
+      });
 
-            console.log('Kernel session', panel);
+      // defer to the next event loop so the panel is active
+      requestAnimationFrame(async () => {
+        const panel: any = openedWidget ?? (app.shell.currentWidget as any);
+        log('Notebook panel is active ', panel);
 
-            await panel.sessionContext.ready;
-            log('Kernel is ready, running all cells in notebook');
+        const sessionContext = panel?.sessionContext ?? panel?.context?.sessionContext;
+        if (!sessionContext) {
+          console.warn('Opened widget has no sessionContext; waiting 5 seconds and running it manually');
+          await delay(5000);
+          await app.commands.execute('notebook:run-all-cells');
+          return;
+        }
 
-            await app.commands.execute('notebook:run-all-cells');
+        await sessionContext.ready;
+        log('Kernel is ready, running all cells in notebook');
 
-            log('All cells finished executing');
-          });
-        });
+        await app.commands.execute('notebook:run-all-cells');
+
+        log('All cells finished executing');
+      });
     } catch (err) {
       console.error('Notebook load/run failed', err);
     }
