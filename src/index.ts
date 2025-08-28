@@ -27,6 +27,8 @@ async function activatePlugin(app: JupyterFrontEnd) {
   window.addEventListener('message', async event => {
     const { data } = event;
 
+    log('Got a message', data);
+
     if (!data?.type || data.type !== 'load-notebook') {
       // this message is not the right type, ignore it
       return;
@@ -110,6 +112,8 @@ async function activatePlugin(app: JupyterFrontEnd) {
 
       await waitForCommand('docmanager:open', app);
 
+      log('docmanager:open is available');
+
       app.commands
         .execute('docmanager:open', {
           path: data.filename,
@@ -133,6 +137,15 @@ async function activatePlugin(app: JupyterFrontEnd) {
       console.error('Notebook load/run failed', err);
     }
   });
+
+  if (window.opener) {
+    window.opener.postMessage({
+      type: 'jupyterlite-ready',
+      timestamp: Date.now()
+    }, '*');
+    
+    log('Sent ready signal to parent window');
+  }
 }
 
 function saveNotebookToIndexedDB(
