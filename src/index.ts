@@ -129,6 +129,8 @@ async function activatePlugin(app: JupyterFrontEnd) {
             const panel = app.shell.currentWidget as any;
             log('Notebook panel is active');
 
+            console.log('Kernel session', panel);
+
             await panel.sessionContext.ready;
             log('Kernel is ready, running all cells in notebook');
 
